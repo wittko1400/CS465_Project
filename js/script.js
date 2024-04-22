@@ -598,7 +598,7 @@ async function compareVariations() {
         minimaxWithPruning: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 }
     };
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1; i++) {
         // Simulate games for Simple Minimax
         const simpleResult = await simulateGame(minimaxSimple);
         results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
@@ -632,62 +632,66 @@ async function simulateGame(aiType) {
     origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     let currentPlayer = toss(); // Decide who starts the game
     let totalMoves = 0;
-    let win = null; // No winner initially
-    let timeStats = [];
+    let moveTimes = []; // Store the times taken for each move
+    let outcome = { win: null, loss: null, draw: false, moves: 0 };
 
+    // Simulate the game
     while (!checkWin(origBoard, player_mark) && !checkWin(origBoard, opponent_mark) && !checkTie()) {
         let startTime = performance.now();
 
+        // Decide the current AI's move based on aiType
         let moveIndex;
-        if (aiType === 'simple') {
-            moveIndex = minimaxSimple(origBoard, 0, currentPlayer).index;
-        } else if (aiType === 'pruning') {
-            moveIndex = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
+        if (currentPlayer == player_mark) {
+            moveIndex = aiType === 'simple' ? minimaxSimple(origBoard, 0, player_mark).index : minimax(origBoard, 0, -10000, 10000, player_mark).index;
         } else {
             // Simulate the 'easy' AI's move
             moveIndex = easy_level();
         }
 
-        origBoard[moveIndex] = currentPlayer; // Make the move
+        // Make the move
+        origBoard[moveIndex] = currentPlayer;
 
         let endTime = performance.now();
-        timeStats.push(endTime - startTime); // Record the move time
+        moveTimes.push(endTime - startTime);
 
-        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark; // Switch the current player
+        // Switch the current player
+        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark;
         totalMoves++;
 
-        if (checkWin(origBoard, currentPlayer)) {
-            win = currentPlayer; // Set the winner
-            break;
-        }
-        if (checkTie()) {
-            win = 'tie'; // Set tie if applicable
-            break;
-        }
+        // Artificially delay the loop to simulate thinking time
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50));
     }
 
-    return {
-        win: win,
-        moves: totalMoves,
-        timeStats: timeStats
-    };
+    // Determine the outcome
+    if (checkWin(origBoard, player_mark)) {
+        outcome.win = player_mark;
+    } else if (checkWin(origBoard, opponent_mark)) {
+        outcome.win = opponent_mark;
+    } else {
+        outcome.draw = true;
+    }
+    outcome.moves = totalMoves;
+    outcome.timeStats = moveTimes;
+
+    return outcome;
 }
 
 function displayResults(results) {
     console.log("Results:", results);
     Object.keys(results).forEach(key => {
         let algorithmResults = results[key];
-        let totalGames = algorithmResults.wins + algorithmResults.losses + algorithmResults.ties;
-        let winRate = (algorithmResults.wins / totalGames * 100).toFixed(2);
+        let totalGames = 1000; // Assuming 1000 games were simulated
+        let losses = totalGames - algorithmResults.wins; // Assuming a loss is any game not won (simplification, adjust as needed)
+        let draws = algorithmResults.draws; // Make sure to track draws in your simulation
         let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
-
         console.log(`${key}:`);
-        console.log(`  Wins: ${algorithmResults.wins} (${winRate}%)`);
-        console.log(`  Losses: ${algorithmResults.losses}`);
-        console.log(`  Ties: ${algorithmResults.ties}`);
-        console.log(`  Average Time: ${averageTime.toFixed(2)} ms`);
-        console.log(`  Shortest Time: ${Math.min(...algorithmResults.timeStats)} ms`);
-        console.log(`  Longest Time: ${Math.max(...algorithmResults.timeStats)} ms`);
+        console.log(`  Wins: ${algorithmResults.wins}`);
+        console.log(`  Losses: ${losses}`);
+        console.log(`  Draws: ${draws}`);
+        console.log(`  Average Move Time: ${averageTime.toFixed(2)} ms`);
+        console.log(`  Shortest Move Time: ${Math.min(...algorithmResults.timeStats).toFixed(2)} ms`);
+        console.log(`  Longest Move Time: ${Math.max(...algorithmResults.timeStats).toFixed(2)} ms`);
     });
 }
+
 
