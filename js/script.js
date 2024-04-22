@@ -681,7 +681,7 @@ function displayResults(results) {
     Object.keys(results).forEach(key => {
         let algorithmResults = results[key];
         let totalGames = 100; // Assuming 1000 games were simulated
-        let losses = totalGames - algorithmResults.wins; // Assuming a loss is any game not won (simplification, adjust as needed)
+        let losses = totalGames - algorithmResults.wins - algorithmResults.draws; // Assuming a loss is any game not won (simplification, adjust as needed)
         let draws = algorithmResults.draws; // Make sure to track draws in your simulation
         let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
         console.log(`${key}:`);
