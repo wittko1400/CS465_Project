@@ -1,10 +1,9 @@
 # Tic-Tac-Toe <img src="https://github.com/jatin-47/Tic-Tac-Toe/blob/main/images/favicon.png" width="30">
 <img src="https://github.com/jatin-47/Tic-Tac-Toe/blob/main/images/ScreenShots/title.png" align="right" style="display:inline;" width="280" >
 
-Tic-Tac-Toe game AI using **Minimax algorithm with alpha-beta pruning optimization.**<br>Heuristic/Evaluation function is such that it chooses the move that makes fastest win / slowest loss by giving score to the terminal states based on the their depth.
+Tic-Tac-Toe game AI using **Minimax algorithm with alpha-beta pruning optimization.**<br>Heuristic/Evaluation function is such that it chooses the move that makes fastest win / slowest loss by giving score to the terminal states based on their depth.
 
-
-<a href="https://jatin-47.github.io/Tic-Tac-Toe/"> <img src="https://github.com/jatin-47/Tic-Tac-Toe/blob/main/images/playnow.png" alt="PLAY NOW!" width="150" height="50"> </a>
+<a href="https://wittko1400.github.io/"> <img src="https://github.com/jatin-47/Tic-Tac-Toe/blob/main/images/playnow.png" alt="PLAY NOW!" width="150" height="50"> </a>
 
 ### Features: ✨
 
