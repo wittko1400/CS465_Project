@@ -627,51 +627,46 @@ async function compareVariations() {
 
 
 // Simulates a single game between two AIs and returns the outcome and statistics.
+// Simulates a single game between two AIs and returns the outcome and statistics.
 async function simulateGame(aiType) {
     // Reset the board and other relevant state
-    origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    origBoard = [0,0,0,0,0,0,0,0,0];
     let currentPlayer = toss(); // Decide who starts the game
     let totalMoves = 0;
-    let win = null; // No winner initially
-    let timeStats = [];
 
+    // Simulate the game
     while (!checkWin(origBoard, player_mark) && !checkWin(origBoard, opponent_mark) && !checkTie()) {
         let startTime = performance.now();
-
+        
+        // Decide the current AI's move based on aiType
         let moveIndex;
-        if (aiType === 'simple') {
-            moveIndex = minimaxSimple(origBoard, 0, currentPlayer).index;
-        } else if (aiType === 'pruning') {
-            moveIndex = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
+        if (currentPlayer == player_mark) {
+            moveIndex = aiType === 'simple' ? minimaxSimple(origBoard, 0, player_mark).index : minimax(origBoard, 0, -10000, 10000, player_mark).index;
         } else {
             // Simulate the 'easy' AI's move
             moveIndex = easy_level();
         }
-
-        origBoard[moveIndex] = currentPlayer; // Make the move
+        
+        // Make the move
+        origBoard[moveIndex] = currentPlayer;
 
         let endTime = performance.now();
-        timeStats.push(endTime - startTime); // Record the move time
+        let moveTime = endTime - startTime;
 
-        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark; // Switch the current player
+        // Switch the current player
+        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark;
         totalMoves++;
 
-        if (checkWin(origBoard, currentPlayer)) {
-            win = currentPlayer; // Set the winner
-            break;
-        }
-        if (checkTie()) {
-            win = 'tie'; // Set tie if applicable
-            break;
-        }
+        // Artificially delay the loop to simulate thinking time
+        await new Promise(resolve => setTimeout(resolve, moveTime));
     }
 
-    return {
-        win: win,
-        moves: totalMoves,
-        timeStats: timeStats
-    };
+    let win = checkWin(origBoard, player_mark) ? player_mark : (checkWin(origBoard, opponent_mark) ? opponent_mark : 'draw');
+    return { win: win, moves: totalMoves };
 }
+
+
+
 
 
 function displayResults(results) {
