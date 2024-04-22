@@ -592,96 +592,35 @@ function next_match()
     }, 500)
 }
 
-async function compareVariations() {
-    const results = {
-        simpleMinimax: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 },
-        minimaxWithPruning: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 }
-    };
+// Function to simulate a game between minimax AI and easy level AI
+function simulateGame(useMinimaxForX) {
+    origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let currentPlayer = 'X'; // Assuming 'X' starts the game
 
-    for (let i = 0; i < 100; i++) {
-        // Simulate games for Simple Minimax
-        const simpleResult = await simulateGame(minimaxSimple);
-        results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
-        results.simpleMinimax.timeStats.push(simpleResult.time);
-        if (simpleResult.time < results.simpleMinimax.shortestTime) {
-            results.simpleMinimax.shortestTime = simpleResult.time;
-        }
-        if (simpleResult.time > results.simpleMinimax.longestTime) {
-            results.simpleMinimax.longestTime = simpleResult.time;
-        }
-
-        // Simulate games for Minimax with Pruning
-        const pruningResult = await simulateGame(minimax);
-        results.minimaxWithPruning.wins += pruningResult.win ? 1 : 0;
-        results.minimaxWithPruning.timeStats.push(pruningResult.time);
-        if (pruningResult.time < results.minimaxWithPruning.shortestTime) {
-            results.minimaxWithPruning.shortestTime = pruningResult.time;
-        }
-        if (pruningResult.time > results.minimaxWithPruning.longestTime) {
-            results.minimaxWithPruning.longestTime = pruningResult.time;
-        }
-    }
-
-    displayResults(results);
-}
-
-
-// Simulates a single game between two AIs and returns the outcome and statistics.
-async function simulateGame(aiType) {
-    // Reset the board and other relevant state
-    origBoard = Array.from({ length: 9 }, () => 0);
-    let currentPlayer = 'X'; // You might want to alternate starting players in your actual simulation loop
-    let moveTimes = [];
-    let outcome = { win: 0, loss: 0, draw: 0, moves: 0 };
-
-    // Simulate the game
-    while (true) {
-        let moveIndex;
-        let startTime = performance.now();
-
-        if (currentPlayer === 'X') {
-            moveIndex = aiType === 'simple' ? minimaxSimple(origBoard, 0, currentPlayer).index : minimax(origBoard, 0, -10000, 10000, currentPlayer).index;
+    while (!checkWin(origBoard, 'X') && !checkWin(origBoard, 'O') && origBoard.includes(0)) {
+        let index;
+        if ((currentPlayer === 'X' && useMinimaxForX) || (currentPlayer === 'O' && !useMinimaxForX)) {
+            index = minimax(origBoard, 0, -10000, 10000, currentPlayer).index;
         } else {
-            moveIndex = easy_level();
+            index = minimaxSimple(origBoard, 0, currentPlayer).index;
+        }
+        origBoard[index] = currentPlayer;
+
+        if (checkWin(origBoard, currentPlayer)) {
+            return currentPlayer; // 'X' or 'O' wins
+        } else if (!origBoard.includes(0)) {
+            return 'Draw'; // It's a tie
         }
 
-        // Make the move
-        origBoard[moveIndex] = currentPlayer;
-
-        let endTime = performance.now();
-        moveTimes.push(endTime - startTime);
-
-        let gameWon = checkWin(origBoard, currentPlayer);
-        if (gameWon) {
-            outcome.win += currentPlayer === player_mark ? 1 : 0;
-            outcome.loss += currentPlayer !== player_mark ? 1 : 0;
-            break;
-        } else if (checkTie()) {
-            outcome.draw += 1;
-            break;
-        }
-
-        // Switch the current player
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        outcome.moves += 1;
-
-        // Artificial delay to mimic thinking time
-        await new Promise(resolve => setTimeout(resolve, 100)); // Adjust timing as needed
     }
-
-    outcome.timeStats = moveTimes;
-    return outcome;
 }
 
-// Enhanced displayResults to include draws and losses along with timing statistics
-function displayResults(results) {
-    console.log("Simulation Results:", results);
-    Object.keys(results).forEach(key => {
-        const stats = results[key];
-        const totalGames = stats.win + stats.loss + stats.draw;
-        const averageTime = stats.timeStats.reduce((acc, t) => acc + t, 0) / stats.timeStats.length;
-        console.log(`${key} - Total Games: ${totalGames}, Wins: ${stats.win}, Losses: ${stats.loss}, Draws: ${stats.draw}`);
-        console.log(`Average Move Time: ${averageTime.toFixed(2)}ms, Moves: ${stats.moves}`);
-    });
-}
+function compareVariations() {
+    // Run the simulation twice, swapping which AI uses minimax and which uses minimaxSimple
+    let firstGameResult = simulateGame(true); // 'X' uses minimax, 'O' uses minimaxSimple
+    let secondGameResult = simulateGame(false); // 'X' uses minimaxSimple, 'O' uses minimax
 
+    console.log(`First game result: ${firstGameResult} wins or it's a ${firstGameResult}`);
+    console.log(`Second game result: ${secondGameResult} wins or it's a ${secondGameResult}`);
+}
