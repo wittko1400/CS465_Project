@@ -373,77 +373,71 @@ function minimaxSimple(newBoard, depth, player) {
 //minimax algorithm with alpha-beta pruning optimization
 //Alpha is the best value that the maximizer (human) currently can guarantee at that level or below.
 //Beta is the best value that the minimizer (ai) currently can guarantee at that level or below.
-function minimax(newBoard, depth, alpha, beta, player)
-{
-    // calculating the playable spots in a board state
-    var availSpots = [];
-    for(var i=0; i<newBoard.length; i++)
-    {
-        if(newBoard[i] == 0)
-            availSpots.push(i);
+function minimax(newBoard, depth, alpha, beta, player) {
+    var availSpots = newBoard.filter(s => s == 0);
+
+    // Terminal states
+    if (checkWinSimulation(newBoard, 'X')) {
+        return { score: player === 'X' ? 20 - depth : depth - 20 };
+    } else if (checkWinSimulation(newBoard, 'O')) {
+        return { score: player === 'O' ? 20 - depth : depth - 20 };
+    } else if (availSpots.length === 0) {
+        return { score: 0 };
     }
 
-    // if terminal state reaches, return with the score
-    if(checkWin(newBoard, opponent_mark)) //let opponent(ai) be the minimizer
-        return {score: -20+depth};
-    else if(checkWin(newBoard, player_mark)) // let player1(human) be the maximiser
-        return {score: 20-depth};
-    else if(availSpots.length == 0) // tie 
-        return {score: 0};
+    var moves = [];
 
+    for (var i = 0; i < availSpots.length; i++) {
+        var move = {};
+        move.index = availSpots[i];
+        newBoard[availSpots[i]] = player;
 
-    //if it is the ai's turn, lowest score (as we have taken ai as the minimiser)
-    if(player === opponent_mark)
-    {
-        var bestScore = 10000;
-        var bestMove = {};
-        for(var i = 0; i < availSpots.length; i++)
-        {
-            newBoard[availSpots[i]] = player; // set the empty spot to the current player
-            
-            var value = minimax(newBoard, depth+1, alpha, beta, player_mark);
-            if(value.score < bestScore)
-            {
-                bestScore = value.score;
-                bestMove.index = availSpots[i];
-                bestMove.score = bestScore;
-            }
-
-            // reset the spot to empty for the next loop itereration
-            newBoard[availSpots[i]] = 0;
-
-            beta = Math.min(beta,bestScore);
-            if(beta <= alpha)
-                break;
+        if (player === 'X') {
+            var result = minimax(newBoard, depth + 1, alpha, beta, 'O');
+            move.score = result.score;
+        } else {
+            var result = minimax(newBoard, depth + 1, alpha, beta, 'X');
+            move.score = result.score;
         }
-        return bestMove;
-    }
-    else // else highest score (as human player is the maximiser)
-    {
-        var bestScore = -10000;
-        var bestMove = {};
-        for(var i = 0; i < availSpots.length; i++)
-        {
-            newBoard[availSpots[i]] = player; // set the empty spot to the current player
 
-            var value = minimax(newBoard, depth+1, alpha, beta, opponent_mark);
-            if(value.score > bestScore)
-            {
-                bestScore = value.score;
-                bestMove.index = availSpots[i];
-                bestMove.score = bestScore;
+        newBoard[availSpots[i]] = 0; // Reset the spot
+        moves.push(move);
+
+        // Alpha-Beta Pruning
+        if (player === 'X') {
+            alpha = Math.max(alpha, move.score);
+            if (beta <= alpha) {
+                break; // Beta cut-off
             }
-
-            // reset the spot to empty for the next loop itereration
-            newBoard[availSpots[i]] = 0;
-
-            alpha = Math.max(alpha,bestScore);
-            if(beta <= alpha)
-                break;    
+        } else {
+            beta = Math.min(beta, move.score);
+            if (beta <= alpha) {
+                break; // Alpha cut-off
+            }
         }
-        return bestMove;
     }
+
+    var bestMove;
+    if (player === 'X') {
+        var bestScore = -Infinity;
+        for (var i = 0; i < moves.length; i++) {
+            if (moves[i].score > bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    } else {
+        var bestScore = Infinity;
+        for (var i = 0; i < moves.length; i++) {
+            if (moves[i].score < bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+    return moves[bestMove];
 }
+
 
 function AI_move() {
     if (ai_level == "E")
@@ -592,35 +586,60 @@ function next_match()
     }, 500)
 }
 
-// Function to simulate a game between minimax AI and easy level AI
-function simulateGame(useMinimaxForX) {
-    origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let currentPlayer = 'X'; // Assuming 'X' starts the game
+function checkWinSimulation(board, player) {
+    const winningCombos = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
 
-    while (!checkWin(origBoard, 'X') && !checkWin(origBoard, 'O') && origBoard.includes(0)) {
-        let index;
-        if ((currentPlayer === 'X' && useMinimaxForX) || (currentPlayer === 'O' && !useMinimaxForX)) {
-            index = minimax(origBoard, 0, -10000, 10000, currentPlayer).index;
-        } else {
-            index = minimaxSimple(origBoard, 0, currentPlayer).index;
+    for (let combo of winningCombos) {
+        if (combo.every(index => board[index] === player)) {
+            return true; // Return true if a winning combo is found
         }
-        origBoard[index] = currentPlayer;
-
-        if (checkWin(origBoard, currentPlayer)) {
-            return currentPlayer; // 'X' or 'O' wins
-        } else if (!origBoard.includes(0)) {
-            return 'Draw'; // It's a tie
-        }
-
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     }
+    return false; // No winning combo found
 }
 
 function compareVariations() {
-    // Run the simulation twice, swapping which AI uses minimax and which uses minimaxSimple
-    let firstGameResult = simulateGame(true); // 'X' uses minimax, 'O' uses minimaxSimple
-    let secondGameResult = simulateGame(false); // 'X' uses minimaxSimple, 'O' uses minimax
+    let minimaxWins = 0;
+    let draws = 0;
 
-    console.log(`First game result: ${firstGameResult} wins or it's a ${firstGameResult}`);
-    console.log(`Second game result: ${secondGameResult} wins or it's a ${secondGameResult}`);
+    for (let game = 0; game < 100; game++) {
+        origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // Reset the board
+        let gameResult = null;
+        let currentPlayer = 'X'; // Let's assume Minimax is 'X' and Easy is 'O'
+
+        while (!gameResult) {
+            let index;
+            if (currentPlayer === 'X') {
+                index = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
+            } else {
+                index = easy_level();
+            }
+            origBoard[index] = currentPlayer; // Update the board
+            gameResult = checkWin(origBoard, currentPlayer); // Check if the game is won
+
+            // Check for a draw
+            if (!gameResult && !origBoard.includes(0)) {
+                draws++;
+                gameResult = { draw: true };
+            }
+
+            // Switch players
+            currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+        }
+
+        if (gameResult && gameResult.player === 'X') {
+            minimaxWins++;
+        }
+    }
+
+    console.log(`After 100 games, Minimax (as 'X') won ${minimaxWins} times and there were ${draws} draws.`);
 }
+
