@@ -591,3 +591,40 @@ function next_match()
             play("ai");
     }, 500)
 }
+
+async function compareVariations() {
+    const results = {
+        simpleMinimax: { wins: 0, timeStats: [] },
+        minimaxWithPruning: { wins: 0, timeStats: [] }
+    };
+
+    for (let i = 0; i < 1000; i++) {
+        // Simulate games for Simple Minimax
+        const simpleResult = await simulateGame(minimaxSimple);
+        results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
+        results.simpleMinimax.timeStats.push(simpleResult.time);
+
+        // Simulate games for Minimax with Pruning
+        const pruningResult = await simulateGame(minimax);
+        results.minimaxWithPruning.wins += pruningResult.win ? 1 : 0;
+        results.minimaxWithPruning.timeStats.push(pruningResult.time);
+    }
+
+    displayResults(results);
+}
+
+
+function simulateGame(minimaxFunction) {
+    // This should simulate a game using the provided Minimax function.
+    // Return an object with whether the game was won and time statistics.
+    return new Promise(resolve => {
+        // Example response
+        resolve({ win: Math.random() > 0.5, time: Math.random() * 1000 });
+    });
+}
+
+function displayResults(results) {
+    // Display or process results
+    console.log(results);
+    // Example: alert(JSON.stringify(results));
+}

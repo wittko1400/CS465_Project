@@ -23,9 +23,9 @@
 <body>
     <a target="_blank" class="github-fork-ribbon" href="https://github.com/jatin-47/Tic-Tac-Toe" data-ribbon="Star me on GitHub" title="Fork me on GitHub">Star me on GitHub</a>
     <h1 class="text-center pt-2 mb-2">Tic-Tac-Toe</h1>
-    
+
     <!-- menu -->
-    <div id="menu" class="d-flex flex-column align-items-center"  >
+    <div id="menu" class="d-flex flex-column align-items-center">
         <div id="select_mark">
             Choose Your Mark:
         </div>
@@ -33,7 +33,7 @@
         <div id="mark_butt" class="btn-group" role="group">
             <input type="radio" class="btn-check" name="mark" id="x" autocomplete="off" checked>
             <label class="btn btn-outline-danger btn-light rounded shadow me-2" for="x">X</label>
-          
+
             <input type="radio" class="btn-check" name="mark" id="o" autocomplete="off">
             <label class="btn btn-outline-success btn-light rounded shadow ms-2" for="o">O</label>
         </div>
@@ -46,23 +46,23 @@
 
         <div id="difficulty" class="carousel slide" data-bs-interval="false">
             <div class="carousel-inner">
-              <div id="E" class="carousel-item active">
-                <div class="diff">Easy</div>
-              </div>
-              <div id="M" class="carousel-item">
-                <div class="diff">Minimax</div>
-              </div>
-              <div id="I" class="carousel-item">
-                <div class="diff">Minimax w. Alpha Beta</div>
-              </div>
+                <div id="E" class="carousel-item active">
+                    <div class="diff">Easy</div>
+                </div>
+                <div id="M" class="carousel-item">
+                    <div class="diff">Minimax</div>
+                </div>
+                <div id="I" class="carousel-item">
+                    <div class="diff">Minimax w. Alpha Beta</div>
+                </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#difficulty" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Previous</span>
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
             </button>
             <button class="carousel-control-next" type="button" data-bs-target="#difficulty" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Next</span>
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
             </button>
         </div>
 
@@ -73,12 +73,17 @@
         </div>
     </div>
 
+    <div id="compare_variations" class="play">
+        <button type="button" class="btn" onclick="compareVariations();">Compare Minimax Variations</button>
+    </div>
+
+
     <!-- game -->
     <div id="game" class="d-flex flex-column align-items-center mb-4">
         <div id="level" class="diff mb-2">
             <img src="images/difficulty.svg" alt="difficulty" id="diff_icon"> Difficulty : <span id="diff_chosen" class="tex"></span>
         </div>
-      
+
         <div class="stats">
             <div class="d-flex flex-row justify-content-between">
                 <div class="matches">
@@ -118,7 +123,7 @@
                 <button type="button" id="main_menu" class="btn" onclick="show_menu();">Main Menu 🏠</button>
             </div>
         </div>
-       
+
 
     </div>
 
@@ -132,7 +137,7 @@
                 Player 1
             </div>
         </div>
-        
+
         <div>
             <div>
                 <span id="player2_mark">O </span>: <span id="player2_score">0</span>
@@ -140,7 +145,7 @@
             <div id="player2">
             </div>
         </div>
-        
+
         <div>
             <div>
                 <span id="draw_score">0</span>
@@ -149,7 +154,7 @@
                 Draws
             </div>
         </div>
-        
+
     </div>
     <img src="images/tic-tac-toe.svg" alt="bg" id="illus">
 
