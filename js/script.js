@@ -374,13 +374,13 @@ function minimaxSimple(newBoard, depth, player) {
 //Alpha is the best value that the maximizer (human) currently can guarantee at that level or below.
 //Beta is the best value that the minimizer (ai) currently can guarantee at that level or below.
 function minimax(newBoard, depth, alpha, beta, player) {
-    var availSpots = newBoard.filter(s => s == 0);
+    var availSpots = newBoard.filter(s => s === 0);
 
-    // Terminal states
+    // Check for a win or tie and return the appropriate score
     if (checkWinSimulation(newBoard, 'X')) {
-        return { score: player === 'X' ? 20 - depth : depth - 20 };
+        return { score: 10 - depth };
     } else if (checkWinSimulation(newBoard, 'O')) {
-        return { score: player === 'O' ? 20 - depth : depth - 20 };
+        return { score: depth - 10 };
     } else if (availSpots.length === 0) {
         return { score: 0 };
     }
@@ -401,42 +401,48 @@ function minimax(newBoard, depth, alpha, beta, player) {
         }
 
         newBoard[availSpots[i]] = 0; // Reset the spot
-        moves.push(move);
 
-        // Alpha-Beta Pruning
         if (player === 'X') {
-            alpha = Math.max(alpha, move.score);
-            if (beta <= alpha) {
-                break; // Beta cut-off
+            if (move.score > alpha) {
+                alpha = move.score;
+            }
+            if (alpha >= beta) {
+                break; // Beta cutoff
             }
         } else {
-            beta = Math.min(beta, move.score);
+            if (move.score < beta) {
+                beta = move.score;
+            }
             if (beta <= alpha) {
-                break; // Alpha cut-off
+                break; // Alpha cutoff
             }
         }
+
+        moves.push(move);
     }
 
-    var bestMove;
+    let bestMove;
     if (player === 'X') {
-        var bestScore = -Infinity;
-        for (var i = 0; i < moves.length; i++) {
-            if (moves[i].score > bestScore) {
-                bestScore = moves[i].score;
-                bestMove = i;
+        let highestScore = -Infinity;
+        moves.forEach((move, index) => {
+            if (move.score > highestScore) {
+                highestScore = move.score;
+                bestMove = index;
             }
-        }
+        });
     } else {
-        var bestScore = Infinity;
-        for (var i = 0; i < moves.length; i++) {
-            if (moves[i].score < bestScore) {
-                bestScore = moves[i].score;
-                bestMove = i;
+        let lowestScore = Infinity;
+        moves.forEach((move, index) => {
+            if (move.score < lowestScore) {
+                lowestScore = move.score;
+                bestMove = index;
             }
-        }
+        });
     }
+
     return moves[bestMove];
 }
+
 
 
 function AI_move() {
