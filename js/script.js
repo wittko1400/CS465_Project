@@ -315,6 +315,61 @@ function medium_level(newBoard, player)
     return moves[bestMove];
 }
 
+// Simple Minimax algorithm without alpha-beta pruning
+function minimaxSimple(newBoard, depth, player) {
+    var availSpots = newBoard.filter(s => s == 0);
+
+    // Checking for the terminal states
+    if (checkWin(newBoard, player_mark)) {
+        return { score: 10 - depth };
+    } else if (checkWin(newBoard, opponent_mark)) {
+        return { score: depth - 10 };
+    } else if (availSpots.length === 0) {
+        return { score: 0 };
+    }
+
+    var moves = [];
+
+    for (var i = 0; i < availSpots.length; i++) {
+        var move = {};
+        move.index = newBoard.findIndex(s => s == availSpots[i]);
+        newBoard[availSpots[i]] = player;
+
+        if (player == player_mark) {
+            var result = minimaxSimple(newBoard, depth + 1, opponent_mark);
+            move.score = result.score;
+        } else {
+            var result = minimaxSimple(newBoard, depth + 1, player_mark);
+            move.score = result.score;
+        }
+
+        newBoard[availSpots[i]] = 0;
+        moves.push(move);
+    }
+
+    var bestMove;
+    if (player === player_mark) {
+        var bestScore = -10000;
+        for (var i = 0; i < moves.length; i++) {
+            if (moves[i].score > bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    } else {
+        var bestScore = 10000;
+        for (var i = 0; i < moves.length; i++) {
+            if (moves[i].score < bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+
+    return moves[bestMove];
+}
+
+
 //minimax algorithm with alpha-beta pruning optimization
 //Alpha is the best value that the maximizer (human) currently can guarantee at that level or below.
 //Beta is the best value that the minimizer (ai) currently can guarantee at that level or below.
@@ -390,15 +445,17 @@ function minimax(newBoard, depth, alpha, beta, player)
     }
 }
 
-function AI_move()
-{
-    if(ai_level == "E")
+function AI_move() {
+    if (ai_level == "E")
         return easy_level();
-    else if(ai_level == "M")
-        return medium_level(origBoard, opponent_mark).index;
-    else if(ai_level == "I")
+    else if (ai_level == "M")
+        // Use minimaxSimple for the "Medium" level.
+        return minimaxSimple(origBoard, 0, opponent_mark).index;
+    else if (ai_level == "I")
+        // Keep using minimax with alpha-beta pruning for the "Impossible" level.
         return minimax(origBoard, 0, -10000, 10000, opponent_mark).index;
 }
+
 
 function check_ai_turn()
 {
