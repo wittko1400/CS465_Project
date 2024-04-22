@@ -626,18 +626,45 @@ async function compareVariations() {
 }
 
 
-function simulateGame(minimaxFunction) {
-    return new Promise(resolve => {
-        let startTime = Date.now();
-        // Simulate decision-making delay
-        setTimeout(() => {
-            let win = Math.random() > 0.5; // Simulate winning randomly
-            let endTime = Date.now();
-            let timeTaken = endTime - startTime; // Calculate the time taken for a move
-            resolve({ win: win, time: timeTaken });
-        }, Math.random() * 100 + 50); // Simulating a realistic delay for decision making
-    });
+// Simulates a single game between two AIs and returns the outcome and statistics.
+async function simulateGame(aiType) {
+    // Reset the board and other relevant state
+    origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let currentPlayer = toss(); // Decide who starts the game
+    let totalMoves = 0;
+
+    // Simulate the game
+    while (!checkWin(origBoard, player_mark) && !checkWin(origBoard, opponent_mark) && !checkTie()) {
+        let startTime = performance.now();
+
+        // Decide the current AI's move based on aiType
+        let moveIndex;
+        if (currentPlayer == player_mark) {
+            moveIndex = aiType === 'simple' ? minimaxSimple(origBoard, 0, player_mark).index : minimax(origBoard, 0, -10000, 10000, player_mark).index;
+        } else {
+            // Simulate the 'easy' AI's move
+            moveIndex = easy_level();
+        }
+
+        // Make the move
+        origBoard[moveIndex] = currentPlayer;
+
+        let endTime = performance.now();
+        let moveTime = endTime - startTime;
+
+        // Switch the current player
+        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark;
+        totalMoves++;
+
+        // Artificially delay the loop to simulate thinking time
+        await new Promise(resolve => setTimeout(resolve, moveTime));
+    }
+
+    let win = checkWin(origBoard, player_mark) ? player_mark : (checkWin(origBoard, opponent_mark) ? opponent_mark : 'draw');
+    return { win: win, moves: totalMoves };
 }
+
+
 
 
 
