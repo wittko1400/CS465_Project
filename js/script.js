@@ -373,77 +373,77 @@ function minimaxSimple(newBoard, depth, player) {
 //minimax algorithm with alpha-beta pruning optimization
 //Alpha is the best value that the maximizer (human) currently can guarantee at that level or below.
 //Beta is the best value that the minimizer (ai) currently can guarantee at that level or below.
-function minimax(newBoard, depth, alpha, beta, player) {
-    var availSpots = newBoard.filter(s => s === 0);
-
-    // Check for a win or tie and return the appropriate score
-    if (checkWinSimulation(newBoard, 'X')) {
-        return { score: 10 - depth };
-    } else if (checkWinSimulation(newBoard, 'O')) {
-        return { score: depth - 10 };
-    } else if (availSpots.length === 0) {
-        return { score: 0 };
+function minimax(newBoard, depth, alpha, beta, player)
+{
+    // calculating the playable spots in a board state
+    var availSpots = [];
+    for(var i=0; i<newBoard.length; i++)
+    {
+        if(newBoard[i] == 0)
+            availSpots.push(i);
     }
 
-    var moves = [];
+    // if terminal state reaches, return with the score
+    if(checkWin(newBoard, opponent_mark)) //let opponent(ai) be the minimizer
+        return {score: -20+depth};
+    else if(checkWin(newBoard, player_mark)) // let player1(human) be the maximiser
+        return {score: 20-depth};
+    else if(availSpots.length == 0) // tie 
+        return {score: 0};
 
-    for (var i = 0; i < availSpots.length; i++) {
-        var move = {};
-        move.index = availSpots[i];
-        newBoard[availSpots[i]] = player;
 
-        if (player === 'X') {
-            var result = minimax(newBoard, depth + 1, alpha, beta, 'O');
-            move.score = result.score;
-        } else {
-            var result = minimax(newBoard, depth + 1, alpha, beta, 'X');
-            move.score = result.score;
+    //if it is the ai's turn, lowest score (as we have taken ai as the minimiser)
+    if(player === opponent_mark)
+    {
+        var bestScore = 10000;
+        var bestMove = {};
+        for(var i = 0; i < availSpots.length; i++)
+        {
+            newBoard[availSpots[i]] = player; // set the empty spot to the current player
+            
+            var value = minimax(newBoard, depth+1, alpha, beta, player_mark);
+            if(value.score < bestScore)
+            {
+                bestScore = value.score;
+                bestMove.index = availSpots[i];
+                bestMove.score = bestScore;
+            }
+
+            // reset the spot to empty for the next loop itereration
+            newBoard[availSpots[i]] = 0;
+
+            beta = Math.min(beta,bestScore);
+            if(beta <= alpha)
+                break;
         }
+        return bestMove;
+    }
+    else // else highest score (as human player is the maximiser)
+    {
+        var bestScore = -10000;
+        var bestMove = {};
+        for(var i = 0; i < availSpots.length; i++)
+        {
+            newBoard[availSpots[i]] = player; // set the empty spot to the current player
 
-        newBoard[availSpots[i]] = 0; // Reset the spot
+            var value = minimax(newBoard, depth+1, alpha, beta, opponent_mark);
+            if(value.score > bestScore)
+            {
+                bestScore = value.score;
+                bestMove.index = availSpots[i];
+                bestMove.score = bestScore;
+            }
 
-        if (player === 'X') {
-            if (move.score > alpha) {
-                alpha = move.score;
-            }
-            if (alpha >= beta) {
-                break; // Beta cutoff
-            }
-        } else {
-            if (move.score < beta) {
-                beta = move.score;
-            }
-            if (beta <= alpha) {
-                break; // Alpha cutoff
-            }
+            // reset the spot to empty for the next loop itereration
+            newBoard[availSpots[i]] = 0;
+
+            alpha = Math.max(alpha,bestScore);
+            if(beta <= alpha)
+                break;    
         }
-
-        moves.push(move);
+        return bestMove;
     }
-
-    let bestMove;
-    if (player === 'X') {
-        let highestScore = -Infinity;
-        moves.forEach((move, index) => {
-            if (move.score > highestScore) {
-                highestScore = move.score;
-                bestMove = index;
-            }
-        });
-    } else {
-        let lowestScore = Infinity;
-        moves.forEach((move, index) => {
-            if (move.score < lowestScore) {
-                lowestScore = move.score;
-                bestMove = index;
-            }
-        });
-    }
-
-    return moves[bestMove];
 }
-
-
 
 function AI_move() {
     if (ai_level == "E")
@@ -592,60 +592,98 @@ function next_match()
     }, 500)
 }
 
-function checkWinSimulation(board, player) {
-    const winningCombos = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
+async function compareVariations() {
+    const results = {
+        simpleMinimax: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 },
+        minimaxWithPruning: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 }
+    };
 
-    for (let combo of winningCombos) {
-        if (combo.every(index => board[index] === player)) {
-            return true; // Return true if a winning combo is found
+    for (let i = 0; i < 1000; i++) {
+        // Simulate games for Simple Minimax
+        const simpleResult = await simulateGame(minimaxSimple);
+        results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
+        results.simpleMinimax.timeStats.push(simpleResult.time);
+        if (simpleResult.time < results.simpleMinimax.shortestTime) {
+            results.simpleMinimax.shortestTime = simpleResult.time;
+        }
+        if (simpleResult.time > results.simpleMinimax.longestTime) {
+            results.simpleMinimax.longestTime = simpleResult.time;
+        }
+
+        // Simulate games for Minimax with Pruning
+        const pruningResult = await simulateGame(minimax);
+        results.minimaxWithPruning.wins += pruningResult.win ? 1 : 0;
+        results.minimaxWithPruning.timeStats.push(pruningResult.time);
+        if (pruningResult.time < results.minimaxWithPruning.shortestTime) {
+            results.minimaxWithPruning.shortestTime = pruningResult.time;
+        }
+        if (pruningResult.time > results.minimaxWithPruning.longestTime) {
+            results.minimaxWithPruning.longestTime = pruningResult.time;
         }
     }
-    return false; // No winning combo found
+
+    displayResults(results);
 }
 
-function compareVariations() {
-    let minimaxWins = 0;
-    let draws = 0;
 
-    for (let game = 0; game < 100; game++) {
-        origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0]; // Reset the board
-        let gameResult = null;
-        let currentPlayer = 'X'; // Let's assume Minimax is 'X' and Easy is 'O'
+// Simulates a single game between two AIs and returns the outcome and statistics.
+async function simulateGame(aiType) {
+    // Reset the board and other relevant state
+    origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let currentPlayer = toss(); // Decide who starts the game
+    let totalMoves = 0;
+    let win = null; // No winner initially
+    let timeStats = [];
 
-        while (!gameResult) {
-            let index;
-            if (currentPlayer === 'X') {
-                index = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
-            } else {
-                index = easy_level();
-            }
-            origBoard[index] = currentPlayer; // Update the board
-            gameResult = checkWin(origBoard, currentPlayer); // Check if the game is won
+    while (!checkWin(origBoard, player_mark) && !checkWin(origBoard, opponent_mark) && !checkTie()) {
+        let startTime = performance.now();
 
-            // Check for a draw
-            if (!gameResult && !origBoard.includes(0)) {
-                draws++;
-                gameResult = { draw: true };
-            }
-
-            // Switch players
-            currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+        let moveIndex;
+        if (aiType === 'simple') {
+            moveIndex = minimaxSimple(origBoard, 0, currentPlayer).index;
+        } else if (aiType === 'pruning') {
+            moveIndex = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
+        } else {
+            // Simulate the 'easy' AI's move
+            moveIndex = easy_level();
         }
 
-        if (gameResult && gameResult.player === 'X') {
-            minimaxWins++;
+        origBoard[moveIndex] = currentPlayer; // Make the move
+
+        let endTime = performance.now();
+        timeStats.push(endTime - startTime); // Record the move time
+
+        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark; // Switch the current player
+        totalMoves++;
+
+        if (checkWin(origBoard, currentPlayer)) {
+            win = currentPlayer; // Set the winner
+            break;
+        }
+        if (checkTie()) {
+            win = 'tie'; // Set tie if applicable
+            break;
         }
     }
 
-    console.log(`After 100 games, Minimax (as 'X') won ${minimaxWins} times and there were ${draws} draws.`);
+    return {
+        win: win,
+        moves: totalMoves,
+        timeStats: timeStats
+    };
+}
+
+
+function displayResults(results) {
+    console.log("Results:", results);
+    Object.keys(results).forEach(key => {
+        let algorithmResults = results[key];
+        let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
+        console.log(`${key}:`);
+        console.log(`  Wins: ${algorithmResults.wins}`);
+        console.log(`  Average Time: ${averageTime.toFixed(2)} ms`);
+        console.log(`  Shortest Time: ${algorithmResults.shortestTime} ms`);
+        console.log(`  Longest Time: ${algorithmResults.longestTime} ms`);
+    });
 }
 
