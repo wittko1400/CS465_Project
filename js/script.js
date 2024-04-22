@@ -632,52 +632,62 @@ async function simulateGame(aiType) {
     origBoard = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     let currentPlayer = toss(); // Decide who starts the game
     let totalMoves = 0;
+    let win = null; // No winner initially
+    let timeStats = [];
 
-    // Simulate the game
     while (!checkWin(origBoard, player_mark) && !checkWin(origBoard, opponent_mark) && !checkTie()) {
         let startTime = performance.now();
 
-        // Decide the current AI's move based on aiType
         let moveIndex;
-        if (currentPlayer == player_mark) {
-            moveIndex = aiType === 'simple' ? minimaxSimple(origBoard, 0, player_mark).index : minimax(origBoard, 0, -10000, 10000, player_mark).index;
+        if (aiType === 'simple') {
+            moveIndex = minimaxSimple(origBoard, 0, currentPlayer).index;
+        } else if (aiType === 'pruning') {
+            moveIndex = minimax(origBoard, 0, -Infinity, Infinity, currentPlayer).index;
         } else {
             // Simulate the 'easy' AI's move
             moveIndex = easy_level();
         }
 
-        // Make the move
-        origBoard[moveIndex] = currentPlayer;
+        origBoard[moveIndex] = currentPlayer; // Make the move
 
         let endTime = performance.now();
-        let moveTime = endTime - startTime;
+        timeStats.push(endTime - startTime); // Record the move time
 
-        // Switch the current player
-        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark;
+        currentPlayer = (currentPlayer == player_mark) ? opponent_mark : player_mark; // Switch the current player
         totalMoves++;
 
-        // Artificially delay the loop to simulate thinking time
-        await new Promise(resolve => setTimeout(resolve, moveTime));
+        if (checkWin(origBoard, currentPlayer)) {
+            win = currentPlayer; // Set the winner
+            break;
+        }
+        if (checkTie()) {
+            win = 'tie'; // Set tie if applicable
+            break;
+        }
     }
 
-    let win = checkWin(origBoard, player_mark) ? player_mark : (checkWin(origBoard, opponent_mark) ? opponent_mark : 'draw');
-    return { win: win, moves: totalMoves };
+    return {
+        win: win,
+        moves: totalMoves,
+        timeStats: timeStats
+    };
 }
-
-
-
-
 
 function displayResults(results) {
     console.log("Results:", results);
     Object.keys(results).forEach(key => {
         let algorithmResults = results[key];
+        let totalGames = algorithmResults.wins + algorithmResults.losses + algorithmResults.ties;
+        let winRate = (algorithmResults.wins / totalGames * 100).toFixed(2);
         let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
+
         console.log(`${key}:`);
-        console.log(`  Wins: ${algorithmResults.wins}`);
+        console.log(`  Wins: ${algorithmResults.wins} (${winRate}%)`);
+        console.log(`  Losses: ${algorithmResults.losses}`);
+        console.log(`  Ties: ${algorithmResults.ties}`);
         console.log(`  Average Time: ${averageTime.toFixed(2)} ms`);
-        console.log(`  Shortest Time: ${algorithmResults.shortestTime} ms`);
-        console.log(`  Longest Time: ${algorithmResults.longestTime} ms`);
+        console.log(`  Shortest Time: ${Math.min(...algorithmResults.timeStats)} ms`);
+        console.log(`  Longest Time: ${Math.max(...algorithmResults.timeStats)} ms`);
     });
 }
 
