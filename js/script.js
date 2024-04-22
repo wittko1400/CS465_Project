@@ -598,7 +598,7 @@ async function compareVariations() {
         minimaxWithPruning: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 }
     };
 
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 100; i++) {
         // Simulate games for Simple Minimax
         const simpleResult = await simulateGame(minimaxSimple);
         results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
@@ -680,7 +680,7 @@ function displayResults(results) {
     console.log("Results:", results);
     Object.keys(results).forEach(key => {
         let algorithmResults = results[key];
-        let totalGames = 1000; // Assuming 1000 games were simulated
+        let totalGames = 100; // Assuming 1000 games were simulated
         let losses = totalGames - algorithmResults.wins; // Assuming a loss is any game not won (simplification, adjust as needed)
         let draws = algorithmResults.draws; // Make sure to track draws in your simulation
         let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
