@@ -373,7 +373,7 @@ function minimaxSimple(newBoard, depth, player) {
 //minimax algorithm with alpha-beta pruning optimization
 //Alpha is the best value that the maximizer (human) currently can guarantee at that level or below.
 //Beta is the best value that the minimizer (ai) currently can guarantee at that level or below.
-function minimax(newBoard, depth, alpha, beta, player)
+function minimaxWithPruning(newBoard, depth, alpha, beta, player)
 {
     // calculating the playable spots in a board state
     var availSpots = [];
