@@ -594,8 +594,8 @@ function next_match()
 
 async function compareVariations() {
     const results = {
-        simpleMinimax: { wins: 0, timeStats: [] },
-        minimaxWithPruning: { wins: 0, timeStats: [] }
+        simpleMinimax: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 },
+        minimaxWithPruning: { wins: 0, timeStats: [], shortestTime: Infinity, longestTime: 0 }
     };
 
     for (let i = 0; i < 1000; i++) {
@@ -603,11 +603,23 @@ async function compareVariations() {
         const simpleResult = await simulateGame(minimaxSimple);
         results.simpleMinimax.wins += simpleResult.win ? 1 : 0;
         results.simpleMinimax.timeStats.push(simpleResult.time);
+        if (simpleResult.time < results.simpleMinimax.shortestTime) {
+            results.simpleMinimax.shortestTime = simpleResult.time;
+        }
+        if (simpleResult.time > results.simpleMinimax.longestTime) {
+            results.simpleMinimax.longestTime = simpleResult.time;
+        }
 
         // Simulate games for Minimax with Pruning
-        const pruningResult = await simulateGame(minimax);
+        const pruningResult = await simulateGame(minimaxWithPruning);
         results.minimaxWithPruning.wins += pruningResult.win ? 1 : 0;
         results.minimaxWithPruning.timeStats.push(pruningResult.time);
+        if (pruningResult.time < results.minimaxWithPruning.shortestTime) {
+            results.minimaxWithPruning.shortestTime = pruningResult.time;
+        }
+        if (pruningResult.time > results.minimaxWithPruning.longestTime) {
+            results.minimaxWithPruning.longestTime = pruningResult.time;
+        }
     }
 
     displayResults(results);
@@ -615,16 +627,30 @@ async function compareVariations() {
 
 
 function simulateGame(minimaxFunction) {
-    // This should simulate a game using the provided Minimax function.
-    // Return an object with whether the game was won and time statistics.
     return new Promise(resolve => {
-        // Example response
-        resolve({ win: Math.random() > 0.5, time: Math.random() * 1000 });
+        let startTime = Date.now();
+        // Simulate decision-making delay
+        setTimeout(() => {
+            let win = Math.random() > 0.5; // Simulate winning randomly
+            let endTime = Date.now();
+            let timeTaken = endTime - startTime; // Calculate the time taken for a move
+            resolve({ win: win, time: timeTaken });
+        }, Math.random() * 100 + 50); // Simulating a realistic delay for decision making
     });
 }
 
+
+
 function displayResults(results) {
-    // Display or process results
-    console.log(results);
-    // Example: alert(JSON.stringify(results));
+    console.log("Results:", results);
+    Object.keys(results).forEach(key => {
+        let algorithmResults = results[key];
+        let averageTime = algorithmResults.timeStats.reduce((a, b) => a + b, 0) / algorithmResults.timeStats.length;
+        console.log(`${key}:`);
+        console.log(`  Wins: ${algorithmResults.wins}`);
+        console.log(`  Average Time: ${averageTime.toFixed(2)} ms`);
+        console.log(`  Shortest Time: ${algorithmResults.shortestTime} ms`);
+        console.log(`  Longest Time: ${algorithmResults.longestTime} ms`);
+    });
 }
+
